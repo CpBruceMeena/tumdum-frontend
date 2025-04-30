@@ -1,12 +1,14 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 
 // Pages
+import Auth from './pages/Auth';
 import Home from './pages/Home';
 import Restaurant from './pages/Restaurant';
-import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import Profile from './pages/Profile';
 
 // Create theme
 const theme = createTheme({
@@ -55,8 +57,11 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/restaurant/:id" element={<Restaurant />} />
-          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/" element={<Navigate to="/auth" replace />} />
         </Routes>
       </Router>
     </ThemeProvider>

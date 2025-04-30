@@ -1,29 +1,37 @@
-# TumDum - Food Delivery Application
+# TumDum - Food Delivery App
 
-TumDum is a modern food delivery web application built with React and Material-UI. It provides a seamless experience for users to browse restaurants, view menus, and order food online.
+A modern food delivery application built with React and Material-UI.
 
 ## Features
 
-- 🍔 Browse popular restaurants
-- 📱 Responsive design for all devices
-- 🎨 Modern UI with Material-UI components
-- ⭐ Restaurant ratings and reviews
-- 🕒 Delivery time estimates
-- 💰 Price information for two people
-- 🛒 Shopping cart functionality
+- Restaurant listing with details
+- Menu items for each restaurant
+- Shopping cart functionality
+- Checkout process
+- User profile management
+- Address management
+- Responsive design
 
 ## Tech Stack
 
-- React.js
+- React
 - Material-UI
 - React Router
-- Emotion (for styling)
+- Local Storage for data persistence
 
 ## Getting Started
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+
+### Installation
 
 1. Clone the repository:
 ```bash
 git clone <repository-url>
+cd tumdum-frontend
 ```
 
 2. Install dependencies:
@@ -36,25 +44,52 @@ npm install
 npm start
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+The application will be available at `http://localhost:3000`
 
 ## Project Structure
 
 ```
 src/
-  ├── components/     # Reusable components
-  ├── pages/         # Page components
-  ├── assets/        # Static assets
-  ├── utils/         # Utility functions
-  └── context/       # React context
+  ├── pages/           # Page components
+  │   ├── Auth.js      # Authentication page
+  │   ├── Home.js      # Home page with restaurant listings
+  │   ├── Restaurant.js # Restaurant details page
+  │   ├── Checkout.js  # Checkout page
+  │   └── Profile.js   # User profile page
+  ├── components/      # Reusable components
+  ├── App.js          # Main application component
+  └── index.js        # Application entry point
 ```
 
-## Available Scripts
+## Features in Detail
 
-- `npm start` - Runs the app in development mode
-- `npm test` - Launches the test runner
-- `npm run build` - Builds the app for production
-- `npm run eject` - Ejects from Create React App
+### Restaurant Listing
+- View list of restaurants
+- Filter restaurants by cuisine
+- Sort by rating, delivery time, or price
+
+### Restaurant Details
+- View restaurant information
+- Browse menu items
+- Add items to cart
+- Adjust quantities
+
+### Shopping Cart
+- Add/remove items
+- Update quantities
+- View total amount
+- Proceed to checkout
+
+### Checkout
+- Review order items
+- Manage delivery address
+- View order summary
+- Place order
+
+### User Profile
+- Manage delivery address
+- View order history
+- Update user preferences
 
 ## Contributing
 
