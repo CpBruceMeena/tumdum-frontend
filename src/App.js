@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Restaurant from './pages/Restaurant';
@@ -129,13 +130,11 @@ const AppRoutes = () => {
         <Route
           path="/"
           element={
-            <ProtectedRoute>
-              {user?.role === 'restaurant' ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Home />
-              )}
-            </ProtectedRoute>
+            user?.role === 'restaurant' ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Home />
+            )
           }
         />
         <Route
@@ -183,9 +182,11 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <Router>
-          <AppRoutes />
-        </Router>
+        <CartProvider>
+          <Router>
+            <AppRoutes />
+          </Router>
+        </CartProvider>
       </AuthProvider>
     </ThemeProvider>
   );

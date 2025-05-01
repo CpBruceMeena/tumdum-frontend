@@ -23,13 +23,11 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import PaymentIcon from '@mui/icons-material/Payment';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EditIcon from '@mui/icons-material/Edit';
+import { useCart } from '../contexts/CartContext';
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = React.useState(() => {
-    const savedCart = localStorage.getItem('cart');
-    return savedCart ? JSON.parse(savedCart) : [];
-  });
+  const { cartItems, updateQuantity, removeFromCart, getTotalAmount, clearCart } = useCart();
 
   const address = React.useMemo(() => {
     const savedAddress = localStorage.getItem('userAddress');
@@ -42,35 +40,8 @@ const Checkout = () => {
     };
   }, []);
 
-  const updateCartItemQuantity = (itemId, change) => {
-    setCartItems(prevItems => {
-      const newItems = prevItems.map(item => {
-        if (item.id === itemId) {
-          const newQuantity = Math.max(0, item.quantity + change);
-          return { ...item, quantity: newQuantity };
-        }
-        return item;
-      }).filter(item => item.quantity > 0);
-      
-      localStorage.setItem('cart', JSON.stringify(newItems));
-      return newItems;
-    });
-  };
-
-  const removeFromCart = (itemId) => {
-    setCartItems(prevItems => {
-      const newItems = prevItems.filter(item => item.id !== itemId);
-      localStorage.setItem('cart', JSON.stringify(newItems));
-      return newItems;
-    });
-  };
-
-  const calculateTotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
   const getDeliveryFee = () => 40;
-  const getTotalAmount = () => calculateTotal() + getDeliveryFee();
+  const calculateTotalWithDelivery = () => getTotalAmount() + getDeliveryFee();
 
   if (cartItems.length === 0) {
     return (
@@ -177,7 +148,7 @@ const Checkout = () => {
                           }}>
                             <IconButton 
                               size="small"
-                              onClick={() => updateCartItemQuantity(item.id, -1)}
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             >
                               <RemoveIcon fontSize="small" />
                             </IconButton>
@@ -186,7 +157,7 @@ const Checkout = () => {
                             </Typography>
                             <IconButton 
                               size="small"
-                              onClick={() => updateCartItemQuantity(item.id, 1)}
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             >
                               <AddIcon fontSize="small" />
                             </IconButton>
@@ -261,7 +232,7 @@ const Checkout = () => {
             <Box>
               <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <span>Items Total</span>
-                <span>₹{calculateTotal()}</span>
+                <span>₹{getTotalAmount()}</span>
               </Typography>
               <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <span>Delivery Fee</span>
@@ -269,7 +240,7 @@ const Checkout = () => {
               </Typography>
               <Typography variant="body1" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                 <span>Taxes & Charges</span>
-                <span>₹{Math.round(calculateTotal() * 0.05)}</span>
+                <span>₹{Math.round(getTotalAmount() * 0.05)}</span>
               </Typography>
             </Box>
             
@@ -278,7 +249,7 @@ const Checkout = () => {
             <Box>
               <Typography variant="h6" sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                 <span>To Pay</span>
-                <span>₹{getTotalAmount() + Math.round(calculateTotal() * 0.05)}</span>
+                <span>₹{calculateTotalWithDelivery() + Math.round(getTotalAmount() * 0.05)}</span>
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Inclusive of all taxes
@@ -298,7 +269,7 @@ const Checkout = () => {
                 return;
               }
               alert('Order placed successfully!');
-              localStorage.removeItem('cart');
+              clearCart();
               navigate('/');
             }}
             sx={{ mt: 2, mb: 0 }}

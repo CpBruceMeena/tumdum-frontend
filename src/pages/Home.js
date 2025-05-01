@@ -9,34 +9,18 @@ import {
   CardMedia, 
   CardContent, 
   Rating, 
-  Button, 
-  Badge,
-  IconButton,
-  Menu,
-  MenuItem,
-  Avatar,
-  Divider,
+  Button,
   CircularProgress,
   Alert
 } from '@mui/material';
-import Logo from '../components/Logo';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import PersonIcon from '@mui/icons-material/Person';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import EmailIcon from '@mui/icons-material/Email';
-import PhoneIcon from '@mui/icons-material/Phone';
-import { restaurantApi } from '../services/api';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
+import { restaurantApi } from '../services/api';
 
 const Home = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [cartItems, setCartItems] = useState([]);
-  const [anchorEl, setAnchorEl] = useState(null);
 
   const fetchRestaurants = useCallback(async () => {
     try {
@@ -69,41 +53,22 @@ const Home = () => {
             index
           });
 
-          let imageUrl = restaurant.cover_image_url;
-          
-          if (restaurant.cover_image_url) {
-            if (restaurant.cover_image_url.startsWith('http')) {
-              console.log('Using absolute URL:', restaurant.cover_image_url);
-            } else if (restaurant.cover_image_url.startsWith('/')) {
-              imageUrl = `http://localhost:8080${restaurant.cover_image_url}`;
-              console.log('Converted relative URL with leading slash:', {
-                original: restaurant.cover_image_url,
-                converted: imageUrl
-              });
-            } else {
-              imageUrl = `http://localhost:8080/${restaurant.cover_image_url}`;
-              console.log('Converted relative URL without leading slash:', {
-                original: restaurant.cover_image_url,
-                converted: imageUrl
-              });
-            }
-          } else {
-            console.log('No cover image URL provided for restaurant:', restaurant.id);
-          }
-
-          console.log('Final image URL:', {
-            id: restaurant.id,
-            name: restaurant.name,
-            finalImageUrl: imageUrl
-          });
-
           return {
             ...restaurant,
-            image: imageUrl
+            image: restaurant.cover_image_url 
+              ? (restaurant.cover_image_url.startsWith('http') 
+                ? restaurant.cover_image_url 
+                : `http://localhost:8080${restaurant.cover_image_url}`)
+              : 'https://via.placeholder.com/300x200',
+            logo: restaurant.logo_url 
+              ? (restaurant.logo_url.startsWith('http') 
+                ? restaurant.logo_url 
+                : `http://localhost:8080${restaurant.logo_url}`)
+              : 'https://via.placeholder.com/100x100'
           };
         });
         
-        console.log('Processed restaurants with images:', processedList);
+        console.log('Processed restaurants list:', processedList);
         setRestaurants(processedList);
       }
     } catch (err) {
@@ -122,37 +87,8 @@ const Home = () => {
     fetchRestaurants();
   }, [fetchRestaurants]);
 
-  useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
-    }
-  }, []);
-
-  const getTotalItems = () => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
-  };
-
   const handleRestaurantClick = (id) => {
     navigate(`/restaurant/${id}`);
-  };
-
-  const handleProfileClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleProfileClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogoutClick = () => {
-    localStorage.removeItem('cart');
-    handleProfileClose();
-    logout();
-  };
-
-  const handleCheckoutClick = () => {
-    navigate('/checkout');
   };
 
   const handleRetry = () => {
@@ -213,7 +149,7 @@ const Home = () => {
               <CardMedia
                 component="img"
                 height="200"
-                image={restaurant.image || 'https://via.placeholder.com/300x200'}
+                image={restaurant.image}
                 alt={restaurant.name}
               />
               <CardContent sx={{ flexGrow: 1 }}>

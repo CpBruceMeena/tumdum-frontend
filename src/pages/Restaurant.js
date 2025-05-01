@@ -24,15 +24,16 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { restaurantApi, dishApi } from '../services/api';
+import { useCart } from '../contexts/CartContext';
 
 const Restaurant = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { cartItems, addToCart, removeFromCart, getTotalItems } = useCart();
   const [restaurant, setRestaurant] = useState(null);
   const [dishes, setDishes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [cart, setCart] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
@@ -78,12 +79,6 @@ const Restaurant = () => {
         
         console.log('Processed dishes:', processedDishes);
         setDishes(processedDishes);
-
-        // Load cart from localStorage
-        const savedCart = localStorage.getItem('cart');
-        if (savedCart) {
-          setCart(JSON.parse(savedCart));
-        }
       } catch (err) {
         console.error('Error fetching restaurant data:', {
           message: err.message,
@@ -100,25 +95,7 @@ const Restaurant = () => {
   }, [id]);
 
   const handleAddToCart = (dish) => {
-    const existingItem = cart.find(item => item.id === dish.id);
-    let newCart;
-
-    if (existingItem) {
-      newCart = cart.map(item =>
-        item.id === dish.id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      );
-    } else {
-      newCart = [...cart, { 
-        ...dish, 
-        quantity: 1,
-        image_url: dish.image_url || dish.image // Use image_url if available, fallback to image
-      }];
-    }
-
-    setCart(newCart);
-    localStorage.setItem('cart', JSON.stringify(newCart));
+    addToCart(dish);
     setSnackbar({
       open: true,
       message: 'Item added to cart',
@@ -127,21 +104,7 @@ const Restaurant = () => {
   };
 
   const handleRemoveFromCart = (dishId) => {
-    const existingItem = cart.find(item => item.id === dishId);
-    let newCart;
-
-    if (existingItem.quantity === 1) {
-      newCart = cart.filter(item => item.id !== dishId);
-    } else {
-      newCart = cart.map(item =>
-        item.id === dishId
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      );
-    }
-
-    setCart(newCart);
-    localStorage.setItem('cart', JSON.stringify(newCart));
+    removeFromCart(dishId);
     setSnackbar({
       open: true,
       message: 'Item removed from cart',
@@ -150,7 +113,7 @@ const Restaurant = () => {
   };
 
   const getItemQuantity = (dishId) => {
-    const item = cart.find(item => item.id === dishId);
+    const item = cartItems.find(item => item.id === dishId);
     return item ? item.quantity : 0;
   };
 
@@ -191,18 +154,20 @@ const Restaurant = () => {
         >
           Back
         </Button>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={
-            <Badge badgeContent={cart.reduce((total, item) => total + item.quantity, 0)} color="error">
-              <ShoppingCartIcon />
-            </Badge>
-          }
-          onClick={handleCheckout}
-        >
-          Checkout
-        </Button>
+        {cartItems.length > 0 && (
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={
+              <Badge badgeContent={getTotalItems()} color="error">
+                <ShoppingCartIcon />
+              </Badge>
+            }
+            onClick={handleCheckout}
+          >
+            Checkout
+          </Button>
+        )}
       </Box>
 
       <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
@@ -330,7 +295,7 @@ const Restaurant = () => {
       </Grid>
 
       {/* Checkout Button */}
-      {cart.length > 0 && (
+      {cartItems.length > 0 && (
         <Box sx={{ position: 'fixed', bottom: 20, right: 20 }}>
           <Button
             variant="contained"
@@ -339,7 +304,7 @@ const Restaurant = () => {
             onClick={handleCheckout}
             sx={{ borderRadius: 2 }}
           >
-            Checkout ({cart.reduce((total, item) => total + item.quantity, 0)} items)
+            Checkout ({getTotalItems()} items)
           </Button>
         </Box>
       )}
@@ -350,8 +315,8 @@ const Restaurant = () => {
         autoHideDuration={3000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
       >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        <Alert 
+          onClose={() => setSnackbar({ ...snackbar, open: false })} 
           severity={snackbar.severity}
           sx={{ width: '100%' }}
         >

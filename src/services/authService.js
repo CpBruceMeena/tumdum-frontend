@@ -46,38 +46,49 @@ class AuthService {
 
   async login(email, password) {
     try {
+      console.log('Attempting login with:', { email });
       const response = await axios.post(`${this.API_URL}/users/login`, {
         email: email.trim(),
         password
       });
       
+      console.log('Login response:', response.data);
+      
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        console.log('Stored user data:', response.data.user);
       }
       
       return response.data;
     } catch (error) {
+      console.error('Login error:', error);
       this.handleError(error);
     }
   }
 
   async register(userData) {
     try {
+      console.log('Attempting registration with:', userData);
       const response = await axios.post(`${this.API_URL}/users/register`, userData);
+      
+      console.log('Registration response:', response.data);
       
       if (response.data.token) {
         localStorage.setItem('token', response.data.token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        console.log('Stored user data:', response.data.user);
       }
       
       return response.data;
     } catch (error) {
+      console.error('Registration error:', error);
       this.handleError(error);
     }
   }
 
   logout() {
+    console.log('Logging out, clearing localStorage');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     localStorage.removeItem('cart');
@@ -86,11 +97,32 @@ class AuthService {
   async getCurrentUser() {
     try {
       const user = JSON.parse(localStorage.getItem('user'));
-      if (!user) return null;
+      console.log('getCurrentUser - localStorage user:', user);
+      
+      if (!user) {
+        console.log('No user found in localStorage');
+        return null;
+      }
 
+      // If we have a user in localStorage, return it immediately
+      if (user.id && user.role) {
+        console.log('Returning user from localStorage:', user);
+        return user;
+      }
+
+      // Otherwise, fetch the user data from the server
+      console.log('Fetching user data from server for ID:', user.id);
       const response = await axios.get(`${this.API_URL}/users/${user.id}`);
-      return response.data;
+      const userData = response.data;
+      
+      console.log('Server user data:', userData);
+      
+      // Update localStorage with the fresh user data
+      localStorage.setItem('user', JSON.stringify(userData));
+      
+      return userData;
     } catch (error) {
+      console.error('getCurrentUser error:', error);
       this.handleError(error);
     }
   }
