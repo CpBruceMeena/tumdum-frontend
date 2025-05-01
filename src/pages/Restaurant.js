@@ -68,8 +68,8 @@ const Restaurant = () => {
         const processedDishes = dishesList.map(dish => ({
           ...dish,
           id: dish.id || dish._id, // Handle both id formats
-          image: dish.image 
-            ? (dish.image.startsWith('http') ? dish.image : `http://localhost:8080${dish.image}`)
+          image: dish.image_url 
+            ? (dish.image_url.startsWith('http') ? dish.image_url : `http://localhost:8080${dish.image_url}`)
             : 'https://via.placeholder.com/300x200',
           price: dish.price || 0,
           description: dish.description || 'No description available',
@@ -110,7 +110,11 @@ const Restaurant = () => {
           : item
       );
     } else {
-      newCart = [...cart, { ...dish, quantity: 1 }];
+      newCart = [...cart, { 
+        ...dish, 
+        quantity: 1,
+        image_url: dish.image_url || dish.image // Use image_url if available, fallback to image
+      }];
     }
 
     setCart(newCart);
@@ -207,9 +211,21 @@ const Restaurant = () => {
             <CardMedia
               component="img"
               height="200"
-              image={restaurant.image || 'https://via.placeholder.com/300x200'}
+              image={restaurant.cover_image_url 
+                ? (restaurant.cover_image_url.startsWith('http') 
+                  ? restaurant.cover_image_url 
+                  : `http://localhost:8080${restaurant.cover_image_url}`)
+                : 'https://via.placeholder.com/300x200'}
               alt={restaurant.name}
               sx={{ borderRadius: 1 }}
+              onError={(e) => {
+                console.error('Restaurant image failed to load:', {
+                  restaurantId: restaurant.id,
+                  restaurantName: restaurant.name,
+                  imageUrl: restaurant.cover_image_url,
+                  error: e
+                });
+              }}
             />
           </Grid>
           <Grid item xs={12} md={8}>
@@ -247,8 +263,16 @@ const Restaurant = () => {
               <CardMedia
                 component="img"
                 height="200"
-                image={dish.image || 'https://via.placeholder.com/300x200'}
+                image={dish.image}
                 alt={dish.name}
+                onError={(e) => {
+                  console.error('Dish image failed to load:', {
+                    dishId: dish.id,
+                    dishName: dish.name,
+                    imageUrl: dish.image,
+                    error: e
+                  });
+                }}
               />
               <CardContent sx={{ flexGrow: 1 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>

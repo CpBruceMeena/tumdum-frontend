@@ -138,9 +138,19 @@ const Checkout = () => {
                       <CardMedia
                         component="img"
                         height="80"
-                        image={item.image}
+                        image={item.image_url 
+                          ? (item.image_url.startsWith('http') ? item.image_url : `http://localhost:8080${item.image_url}`)
+                          : 'https://via.placeholder.com/300x200'}
                         alt={item.name}
                         sx={{ borderRadius: 1 }}
+                        onError={(e) => {
+                          console.error('Dish image failed to load:', {
+                            dishId: item.id,
+                            dishName: item.name,
+                            imageUrl: item.image_url,
+                            error: e
+                          });
+                        }}
                       />
                     </Grid>
                     <Grid item xs={9} sm={10}>

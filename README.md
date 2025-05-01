@@ -13,6 +13,7 @@ A modern food delivery application built with React and Material-UI, integrated 
 - Restaurant owner dashboard
 - Backend API integration
 - Responsive design
+- Image handling with fallbacks
 
 ## Tech Stack
 
@@ -75,24 +76,28 @@ src/
 - View list of restaurants from backend API
 - Filter restaurants by cuisine
 - Sort by rating, delivery time, or price
+- Display restaurant cover images with fallback
 
 ### Restaurant Details
 - View restaurant information
 - Browse menu items from backend API
 - Add items to cart
 - Adjust quantities
+- Display dish images with fallback
 
 ### Shopping Cart
 - Add/remove items
 - Update quantities
 - View total amount
 - Proceed to checkout
+- Display item images in cart
 
 ### Checkout
 - Review order items
 - Manage delivery address
 - View order summary with taxes
 - Place order
+- Display item images in order summary
 
 ### Restaurant Dashboard
 - Manage restaurant details
@@ -114,6 +119,17 @@ The application integrates with a backend API running on port 8080. The followin
 - `/api/restaurants/:id/dishes` - Get restaurant dishes
 - `/api/auth` - Authentication endpoints
 - `/api/orders` - Order management
+
+### Image Handling
+
+The application handles images from the backend API with the following features:
+
+- Restaurant cover images: Uses `cover_image_url` field
+- Restaurant logo: Uses `logo_url` field
+- Dish images: Uses `image_url` field
+- Automatic URL construction for relative paths
+- Fallback placeholder images when images fail to load
+- Error logging for image loading failures
 
 ## Contributing
 
