@@ -1,19 +1,29 @@
-# TumDum - Food Delivery App
+# TumDum - Food Delivery Platform
 
-A modern food delivery application built with React and Material-UI, integrated with a backend API.
+A modern food delivery platform built with React and Material-UI, featuring a beautiful and responsive design.
 
 ## Features
 
-- Restaurant listing with details
-- Menu items for each restaurant
-- Shopping cart functionality
-- Checkout process
-- User profile management
-- Address management
-- Restaurant owner dashboard
-- Backend API integration
-- Responsive design
-- Image handling with fallbacks
+- **User Authentication**
+  - Secure login and registration
+  - Role-based access (Customer/Restaurant)
+  - Profile management
+
+- **Restaurant Management**
+  - Restaurant listing and search
+  - Menu management
+  - Order tracking
+
+- **Customer Features**
+  - Browse restaurants and menus
+  - Add items to cart
+  - Checkout functionality
+  - Order history
+
+- **Navigation**
+  - Responsive navbar with dynamic elements
+  - Checkout button for customers
+  - User profile menu with detailed information
 
 ## Tech Stack
 
@@ -56,19 +66,19 @@ The application will be available at `http://localhost:3000`
 
 ```
 src/
-  ├── pages/                    # Page components
-  │   ├── Auth.js              # Authentication page
-  │   ├── Home.js              # Home page with restaurant listings
-  │   ├── Restaurant.js        # Restaurant details page
-  │   ├── Checkout.js          # Checkout page
-  │   ├── Profile.js           # User profile page
-  │   └── RestaurantDashboard.js # Restaurant owner dashboard
-  ├── services/                # API services
-  │   └── api.js              # API integration
-  ├── components/              # Reusable components
-  ├── App.js                   # Main application component
-  └── index.js                 # Application entry point
+├── components/         # Reusable UI components
+├── contexts/          # React context providers
+├── pages/            # Page components
+├── services/         # API services
+└── utils/            # Utility functions
 ```
+
+## Recent Updates
+
+- Enhanced navbar with checkout functionality for customers
+- Improved user profile menu with detailed information
+- Added cart badge to show number of items
+- Optimized component styling and layout
 
 ## Features in Detail
 
@@ -134,10 +144,10 @@ The application handles images from the backend API with the following features:
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create your feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 

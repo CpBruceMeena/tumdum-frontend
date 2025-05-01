@@ -190,187 +190,51 @@ const Home = () => {
   }
 
   return (
-    <Box>
-      {/* Header */}
-      <Box sx={{ 
-        bgcolor: 'primary.main', 
-        color: 'white', 
-        py: 3,
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-      }}>
-        <Container>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Logo size="medium" />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Button
-                variant="contained"
-                color="secondary"
-                startIcon={
-                  <Badge badgeContent={getTotalItems()} color="error">
-                    <ShoppingCartIcon />
-                  </Badge>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Discover Restaurants
+      </Typography>
+      <Grid container spacing={3}>
+        {restaurants.map((restaurant) => (
+          <Grid item xs={12} sm={6} md={4} key={restaurant.id}>
+            <Card 
+              sx={{ 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                cursor: 'pointer',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  transition: 'transform 0.2s ease-in-out'
                 }
-                onClick={handleCheckoutClick}
-                sx={{ 
-                  bgcolor: 'white',
-                  color: 'primary.main',
-                  '&:hover': {
-                    bgcolor: 'grey.100'
-                  }
-                }}
-              >
-                Checkout
-              </Button>
-              <IconButton 
-                onClick={handleProfileClick}
-                sx={{ 
-                  color: 'white',
-                  '&:hover': {
-                    bgcolor: 'rgba(255, 255, 255, 0.1)'
-                  }
-                }}
-              >
-                <PersonIcon />
-              </IconButton>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleProfileClose}
-                PaperProps={{
-                  sx: {
-                    mt: 1.5,
-                    minWidth: 280,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                  }
-                }}
-              >
-                <Box sx={{ p: 2, textAlign: 'center' }}>
-                  <Avatar 
-                    sx={{ 
-                      width: 80, 
-                      height: 80, 
-                      margin: '0 auto 16px',
-                      bgcolor: 'primary.main'
-                    }}
-                  >
-                    <PersonIcon sx={{ fontSize: 40 }} />
-                  </Avatar>
-                  <Typography variant="h6" gutterBottom>
-                    {user?.name || 'User'}
-                  </Typography>
+              }}
+              onClick={() => handleRestaurantClick(restaurant.id)}
+            >
+              <CardMedia
+                component="img"
+                height="200"
+                image={restaurant.image || 'https://via.placeholder.com/300x200'}
+                alt={restaurant.name}
+              />
+              <CardContent sx={{ flexGrow: 1 }}>
+                <Typography gutterBottom variant="h6" component="h2">
+                  {restaurant.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  {restaurant.cuisine}
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Rating value={restaurant.rating || 0} precision={0.5} readOnly size="small" />
                   <Typography variant="body2" color="text.secondary">
-                    {user?.role === 'restaurant' ? 'Restaurant Owner' : 'Customer'}
+                    ({restaurant.reviews || 0} reviews)
                   </Typography>
                 </Box>
-                <Divider />
-                <MenuItem sx={{ py: 1.5 }}>
-                  <EmailIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                  <Typography variant="body2">{user?.email}</Typography>
-                </MenuItem>
-                {user?.phone && (
-                  <MenuItem sx={{ py: 1.5 }}>
-                    <PhoneIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                    <Typography variant="body2">{user.phone}</Typography>
-                  </MenuItem>
-                )}
-                {user?.address && (
-                  <MenuItem sx={{ py: 1.5 }}>
-                    <LocationOnIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                    <Typography variant="body2">
-                      {user.address}
-                      {user.city && `, ${user.city}`}
-                      {user.state && `, ${user.state}`}
-                      {user.postal_code && ` - ${user.postal_code}`}
-                    </Typography>
-                  </MenuItem>
-                )}
-                <Divider />
-                <MenuItem onClick={handleLogoutClick} sx={{ color: 'error.main' }}>
-                  Logout
-                </MenuItem>
-              </Menu>
-            </Box>
-          </Box>
-        </Container>
-      </Box>
-
-      {/* Main Content */}
-      <Container sx={{ py: 4 }}>
-        <Typography variant="h5" component="h2" sx={{ 
-          mb: 3,
-          color: 'primary.dark',
-          fontWeight: 600
-        }}>
-          Popular Restaurants
-        </Typography>
-        
-        <Grid container spacing={3}>
-          {restaurants.map((restaurant) => (
-            <Grid item xs={12} sm={6} md={4} key={restaurant.id}>
-              <Card 
-                onClick={() => handleRestaurantClick(restaurant.id)}
-                sx={{ 
-                  height: '100%', 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  transition: 'transform 0.2s',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    transform: 'translateY(-4px)'
-                  }
-                }}
-              >
-                <CardMedia
-                  component="img"
-                  height="200"
-                  image={restaurant.image}
-                  alt={restaurant.name}
-                  onError={(e) => {
-                    console.error('Image failed to load:', {
-                      restaurantId: restaurant.id,
-                      restaurantName: restaurant.name,
-                      imageUrl: restaurant.image,
-                      error: e
-                    });
-                    // Try local image as fallback
-                    const localImageIndex = (restaurant.id % 5) + 1;
-                    e.target.src = `/images/restaurants/covers/restaurant_cover_${localImageIndex}.jpg`;
-                  }}
-                  onLoad={(e) => {
-                    console.log('Image loaded successfully:', {
-                      restaurantId: restaurant.id,
-                      restaurantName: restaurant.name,
-                      imageUrl: restaurant.image
-                    });
-                  }}
-                  sx={{
-                    objectFit: 'cover',
-                    backgroundColor: 'grey.200'
-                  }}
-                />
-                <CardContent>
-                  <Typography gutterBottom variant="h6" component="div">
-                    {restaurant.name}
-                  </Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Rating value={restaurant.rating || 0} precision={0.1} size="small" readOnly />
-                    <Typography variant="body2" sx={{ ml: 1 }}>
-                      {restaurant.rating || 'N/A'}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary">
-                    {restaurant.cuisine}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {restaurant.deliveryTime || '30-40'} min
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
-    </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Container>
   );
 };
 

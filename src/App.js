@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import Layout from './components/Layout';
 import Home from './pages/Home';
 import Restaurant from './pages/Restaurant';
 import Auth from './pages/Auth';
@@ -123,55 +124,57 @@ const AppRoutes = () => {
   const { user } = useAuth();
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            {user?.role === 'restaurant' ? (
-              <Navigate to="/dashboard" replace />
+    <Layout>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              {user?.role === 'restaurant' ? (
+                <Navigate to="/dashboard" replace />
+              ) : (
+                <Home />
+              )}
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/auth"
+          element={
+            user ? (
+              <Navigate to={user.role === 'restaurant' ? '/dashboard' : '/'} replace />
             ) : (
-              <Home />
-            )}
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/auth"
-        element={
-          user ? (
-            <Navigate to={user.role === 'restaurant' ? '/dashboard' : '/'} replace />
-          ) : (
-            <Auth />
-          )
-        }
-      />
-      <Route
-        path="/restaurant/:id"
-        element={
-          <ProtectedRoute>
-            <Restaurant />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/checkout"
-        element={
-          <ProtectedRoute>
-            <Checkout />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute requiredRole="restaurant">
-            <RestaurantDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+              <Auth />
+            )
+          }
+        />
+        <Route
+          path="/restaurant/:id"
+          element={
+            <ProtectedRoute>
+              <Restaurant />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute requiredRole="restaurant">
+              <RestaurantDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Layout>
   );
 };
 
