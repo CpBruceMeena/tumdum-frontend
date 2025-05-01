@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Paper,
@@ -17,9 +17,15 @@ import {
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import Logo from '../components/Logo';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import authService from '../services/authService';
 
 const Auth = () => {
   const theme = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState(0); // 0 for Customer, 1 for Restaurant
   const [isLogin, setIsLogin] = useState(true); // true for login, false for signup
   const [formData, setFormData] = useState({
@@ -37,6 +43,13 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      const redirectPath = location.state?.from || '/';
+      navigate(redirectPath);
+    }
+  }, [isAuthenticated, navigate, location]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -85,15 +98,35 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      // TODO: Implement actual authentication logic here
-      console.log('Form submitted:', {
-        ...formData,
-        userType: activeTab === 0 ? 'customer' : 'restaurant',
-        isLogin
-      });
+      if (isLogin) {
+        const { token, user } = await authService.login(formData.email, formData.password);
+        await login(token, user);
+      } else {
+        const userData = {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          role: activeTab === 0 ? 'customer' : 'restaurant'
+        };
+
+        if (activeTab === 1) { // Restaurant registration
+          userData.restaurant_details = {
+            name: formData.name,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            state: formData.state,
+            country: formData.country,
+            postal_code: formData.postal_code
+          };
+        }
+
+        const { token, user } = await authService.register(userData);
+        await login(token, user);
+      }
     } catch (err) {
       console.error('Authentication error:', err);
-      setError('Authentication failed. Please try again.');
+      setError(err.message || 'Authentication failed. Please try again.');
     } finally {
       setLoading(false);
     }

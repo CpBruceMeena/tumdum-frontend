@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Home from './pages/Home';
 import Restaurant from './pages/Restaurant';
 import Auth from './pages/Auth';
@@ -99,78 +100,90 @@ const theme = createTheme({
   },
 });
 
+const ProtectedRoute = ({ children, requiredRole }) => {
+  const { isAuthenticated, user, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return null; // or a loading spinner
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
+  }
+
+  if (requiredRole && user.role !== requiredRole) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
+const AppRoutes = () => {
+  const { user } = useAuth();
+
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            {user?.role === 'restaurant' ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Home />
+            )}
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/auth"
+        element={
+          user ? (
+            <Navigate to={user.role === 'restaurant' ? '/dashboard' : '/'} replace />
+          ) : (
+            <Auth />
+          )
+        }
+      />
+      <Route
+        path="/restaurant/:id"
+        element={
+          <ProtectedRoute>
+            <Restaurant />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/checkout"
+        element={
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute requiredRole="restaurant">
+            <RestaurantDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
 const App = () => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('cart');
-    setUser(null);
-  };
-
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              user ? (
-                user.type === 'restaurant' ? (
-                  <Navigate to="/dashboard" replace />
-                ) : (
-                  <Home user={user} onLogout={handleLogout} />
-                )
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          />
-          <Route
-            path="/auth"
-            element={user ? <Navigate to="/" replace /> : <Auth />}
-          />
-          <Route
-            path="/restaurant/:id"
-            element={
-              user ? (
-                <Restaurant user={user} onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          />
-          <Route
-            path="/checkout"
-            element={
-              user ? (
-                <Checkout user={user} onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/auth" replace />
-              )
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              user && user.type === 'restaurant' ? (
-                <RestaurantDashboard user={user} onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+      <AuthProvider>
+        <Router>
+          <AppRoutes />
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 };
