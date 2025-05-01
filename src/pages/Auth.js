@@ -1,147 +1,302 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Box,
   Container,
   Paper,
   Typography,
   TextField,
   Button,
-  Link,
+  Box,
   Tabs,
   Tab,
-  InputAdornment,
-  IconButton,
-  Grid,
   Alert,
-  CircularProgress
+  CircularProgress,
+  useTheme,
+  alpha,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import Logo from '../components/Logo';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import PersonIcon from '@mui/icons-material/Person';
 
 const Auth = () => {
-  const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
-  const [userType, setUserType] = useState('customer');
+  const theme = useTheme();
+  const [activeTab, setActiveTab] = useState(0); // 0 for Customer, 1 for Restaurant
+  const [isLogin, setIsLogin] = useState(true); // true for login, false for signup
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     password: '',
-    name: '',
-    restaurantName: '',
-    cuisine: '',
+    confirmPassword: '',
+    phone: '',
     address: '',
+    city: '',
+    state: '',
+    country: '',
+    postal_code: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState('');
 
-  const handleChange = (e) => {
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+    setError('');
+  };
+
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: '',
-      }));
-    }
-    setApiError('');
   };
 
   const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    if (!formData.email || !formData.password) {
+      setError('Email and password are required');
+      return false;
     }
 
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-
-    if (!isLogin) {
-      if (userType === 'customer') {
-        if (!formData.name) {
-          newErrors.name = 'Name is required';
-        }
-      } else {
-        if (!formData.restaurantName) {
-          newErrors.restaurantName = 'Restaurant name is required';
-        }
-        if (!formData.cuisine) {
-          newErrors.cuisine = 'Cuisine type is required';
-        }
-        if (!formData.address) {
-          newErrors.address = 'Address is required';
-        }
+    if (!isLogin) { // Registration validation
+      if (!formData.name) {
+        setError('Name is required');
+        return false;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match');
+        return false;
+      }
+      if (formData.password.length < 6) {
+        setError('Password must be at least 6 characters long');
+        return false;
       }
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      try {
-        setLoading(true);
-        setApiError('');
+    setError('');
+    
+    if (!validateForm()) {
+      return;
+    }
 
-        // Skip authentication and directly proceed
-        const mockUserData = {
-          id: 1,
-          email: formData.email,
-          name: userType === 'customer' ? formData.name : formData.restaurantName,
-          type: userType,
-          ...(userType === 'restaurant' && {
-            restaurantDetails: {
-              cuisine: formData.cuisine,
-              address: formData.address,
-            },
-          }),
-        };
-
-        // Store mock user data
-        localStorage.setItem('user', JSON.stringify(mockUserData));
-        localStorage.setItem('token', 'mock-token');
-
-        // Navigate based on user type
-        if (userType === 'restaurant') {
-          navigate('/dashboard');
-        } else {
-          navigate('/');
-        }
-      } catch (error) {
-        console.error('Navigation error:', error);
-        setApiError('Navigation failed. Please try again.');
-      } finally {
-        setLoading(false);
-      }
+    setLoading(true);
+    try {
+      // TODO: Implement actual authentication logic here
+      console.log('Form submitted:', {
+        ...formData,
+        userType: activeTab === 0 ? 'customer' : 'restaurant',
+        isLogin
+      });
+    } catch (err) {
+      console.error('Authentication error:', err);
+      setError('Authentication failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleTabChange = (event, newValue) => {
-    setUserType(newValue);
-    setFormData({
-      email: '',
-      password: '',
-      name: '',
-      restaurantName: '',
-      cuisine: '',
-      address: '',
-    });
-    setErrors({});
-    setApiError('');
+  const renderFormFields = () => {
+    const commonFields = (
+      <>
+        <TextField
+          fullWidth
+          label="Email"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleInputChange}
+          margin="normal"
+          required
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: 'primary.main'
+              }
+            }
+          }}
+        />
+        <TextField
+          fullWidth
+          label="Password"
+          name="password"
+          type={showPassword ? 'text' : 'password'}
+          value={formData.password}
+          onChange={handleInputChange}
+          margin="normal"
+          required
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: 'primary.main'
+              }
+            }
+          }}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton
+                  onClick={() => setShowPassword(!showPassword)}
+                  edge="end"
+                >
+                  {showPassword ? <VisibilityOff /> : <Visibility />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
+      </>
+    );
+
+    if (isLogin) {
+      return commonFields;
+    }
+
+    return (
+      <>
+        <TextField
+          fullWidth
+          label="Name"
+          name="name"
+          value={formData.name}
+          onChange={handleInputChange}
+          margin="normal"
+          required
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: 'primary.main'
+              }
+            }
+          }}
+        />
+        {commonFields}
+        <TextField
+          fullWidth
+          label="Confirm Password"
+          name="confirmPassword"
+          type="password"
+          value={formData.confirmPassword}
+          onChange={handleInputChange}
+          margin="normal"
+          required
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              '&:hover fieldset': {
+                borderColor: 'primary.main'
+              }
+            }
+          }}
+        />
+        {activeTab === 1 && ( // Only show these fields for restaurant registration
+          <>
+            <TextField
+              fullWidth
+              label="Phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+              margin="normal"
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: 'primary.main'
+                  }
+                }
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Address"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+              margin="normal"
+              required
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  '&:hover fieldset': {
+                    borderColor: 'primary.main'
+                  }
+                }
+              }}
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="City"
+                name="city"
+                value={formData.city}
+                onChange={handleInputChange}
+                margin="normal"
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main'
+                    }
+                  }
+                }}
+              />
+              <TextField
+                fullWidth
+                label="State"
+                name="state"
+                value={formData.state}
+                onChange={handleInputChange}
+                margin="normal"
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main'
+                    }
+                  }
+                }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Country"
+                name="country"
+                value={formData.country}
+                onChange={handleInputChange}
+                margin="normal"
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main'
+                    }
+                  }
+                }}
+              />
+              <TextField
+                fullWidth
+                label="Postal Code"
+                name="postal_code"
+                value={formData.postal_code}
+                onChange={handleInputChange}
+                margin="normal"
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    '&:hover fieldset': {
+                      borderColor: 'primary.main'
+                    }
+                  }
+                }}
+              />
+            </Box>
+          </>
+        )}
+      </>
+    );
   };
 
   return (
@@ -150,218 +305,170 @@ const Auth = () => {
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
-        bgcolor: 'background.default',
-        py: 4,
+        bgcolor: alpha(theme.palette.primary.main, 0.05),
+        py: 4
       }}
     >
       <Container maxWidth="lg">
-        <Grid container spacing={4} alignItems="center">
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: 'center',
+            gap: 4
+          }}
+        >
           {/* Left side - Logo and Welcome Message */}
-          <Grid item xs={12} md={6}>
-            <Box
+          <Box
+            sx={{
+              flex: 1,
+              textAlign: 'center',
+              display: { xs: 'none', md: 'block' }
+            }}
+          >
+            <Box sx={{ mb: 4 }}>
+              <Logo size="large" />
+            </Box>
+            <Typography
+              variant="h3"
               sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                textAlign: 'center',
-                p: 4,
+                color: 'primary.main',
+                fontWeight: 'bold',
+                mb: 2
               }}
             >
-              <Box sx={{ mb: 4 }}>
-                <Logo size="large" />
-              </Box>
-              <Typography variant="h4" sx={{ mb: 2, color: 'primary.main', fontWeight: 'bold' }}>
-                Welcome to TumDum
+              Welcome to TumDum
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                color: 'text.secondary',
+                mb: 2
+              }}
+            >
+              Your favorite food delivery platform
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'text.secondary',
+                maxWidth: '400px',
+                mx: 'auto'
+              }}
+            >
+              Order from your favorite restaurants and get delicious food delivered right to your doorstep.
+            </Typography>
+          </Box>
+
+          {/* Right side - Auth Form */}
+          <Paper
+            elevation={3}
+            sx={{
+              flex: 1,
+              p: { xs: 3, sm: 4, md: 5 },
+              borderRadius: 2,
+              maxWidth: '500px',
+              width: '100%',
+              bgcolor: 'background.paper'
+            }}
+          >
+            <Box sx={{ mb: 4, textAlign: 'center' }}>
+              <Typography
+                variant="h4"
+                component="h1"
+                gutterBottom
+                sx={{ color: 'primary.main', fontWeight: 'bold' }}
+              >
+                {isLogin ? 'Welcome Back!' : 'Create Account'}
               </Typography>
-              <Typography variant="h6" sx={{ color: 'text.secondary', mb: 2 }}>
-                Your favorite food delivery platform
-              </Typography>
-              <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: '400px' }}>
-                Order from your favorite restaurants and get delicious food delivered right to your doorstep.
+              <Typography variant="body1" color="text.secondary">
+                {isLogin
+                  ? 'Sign in to continue to TumDum'
+                  : 'Join TumDum to start your journey'}
               </Typography>
             </Box>
-          </Grid>
 
-          {/* Right side - Login/Signup Form */}
-          <Grid item xs={12} md={6}>
-            <Paper
-              elevation={3}
-              sx={{
-                p: { xs: 3, sm: 4, md: 5 },
-                borderRadius: 2,
-                maxWidth: '500px',
-                mx: 'auto',
-              }}
-            >
-              <Box sx={{ mb: 4, textAlign: 'center' }}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                  {isLogin ? 'Welcome Back!' : 'Create Account'}
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  {isLogin
-                    ? 'Sign in to continue to TumDum'
-                    : 'Join TumDum to start your journey'}
-                </Typography>
-              </Box>
-
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
               <Tabs
-                value={userType}
+                value={activeTab}
                 onChange={handleTabChange}
                 centered
-                sx={{ mb: 3 }}
+                sx={{
+                  '& .MuiTab-root': {
+                    color: 'text.secondary',
+                    '&.Mui-selected': {
+                      color: 'primary.main',
+                      fontWeight: 'bold'
+                    }
+                  }
+                }}
               >
-                <Tab
-                  value="customer"
-                  label="Customer"
-                  icon={<PersonIcon />}
-                  iconPosition="start"
-                />
-                <Tab
-                  value="restaurant"
-                  label="Restaurant"
-                  icon={<RestaurantIcon />}
-                  iconPosition="start"
-                />
+                <Tab label="Customer" />
+                <Tab label="Restaurant" />
               </Tabs>
+            </Box>
 
-              {apiError && (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                  {apiError}
-                </Alert>
-              )}
+            {error && (
+              <Alert
+                severity="error"
+                sx={{
+                  mb: 3,
+                  bgcolor: alpha(theme.palette.error.main, 0.1),
+                  color: 'error.main'
+                }}
+              >
+                {error}
+              </Alert>
+            )}
 
-              <form onSubmit={handleSubmit}>
-                <Grid container spacing={2}>
-                  {!isLogin && userType === 'customer' && (
-                    <Grid item xs={12}>
-                      <TextField
-                        fullWidth
-                        label="Name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        error={!!errors.name}
-                        helperText={errors.name}
-                      />
-                    </Grid>
-                  )}
+            <form onSubmit={handleSubmit}>
+              {renderFormFields()}
 
-                  {!isLogin && userType === 'restaurant' && (
-                    <>
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="Restaurant Name"
-                          name="restaurantName"
-                          value={formData.restaurantName}
-                          onChange={handleChange}
-                          error={!!errors.restaurantName}
-                          helperText={errors.restaurantName}
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="Cuisine Type"
-                          name="cuisine"
-                          value={formData.cuisine}
-                          onChange={handleChange}
-                          error={!!errors.cuisine}
-                          helperText={errors.cuisine}
-                        />
-                      </Grid>
-                      <Grid item xs={12}>
-                        <TextField
-                          fullWidth
-                          label="Address"
-                          name="address"
-                          value={formData.address}
-                          onChange={handleChange}
-                          error={!!errors.address}
-                          helperText={errors.address}
-                          multiline
-                          rows={2}
-                        />
-                      </Grid>
-                    </>
-                  )}
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={loading}
+                sx={{
+                  mt: 3,
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'primary.dark'
+                  }
+                }}
+              >
+                {loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  isLogin ? 'Sign In' : 'Create Account'
+                )}
+              </Button>
 
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      error={!!errors.email}
-                      helperText={errors.email}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      value={formData.password}
-                      onChange={handleChange}
-                      error={!!errors.password}
-                      helperText={errors.password}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() => setShowPassword(!showPassword)}
-                              edge="end"
-                            >
-                              {showPassword ? <VisibilityOff /> : <Visibility />}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <Button
-                      type="submit"
-                      fullWidth
-                      variant="contained"
-                      size="large"
-                      disabled={loading}
-                      sx={{ mt: 2 }}
-                    >
-                      {loading ? (
-                        <CircularProgress size={24} color="inherit" />
-                      ) : (
-                        isLogin ? 'Sign In' : 'Create Account'
-                      )}
-                    </Button>
-                  </Grid>
-
-                  <Grid item xs={12} sx={{ textAlign: 'center' }}>
-                    <Link
-                      component="button"
-                      variant="body2"
-                      onClick={() => {
-                        setIsLogin(!isLogin);
-                        setErrors({});
-                        setApiError('');
-                      }}
-                      sx={{ mt: 2 }}
-                    >
-                      {isLogin
-                        ? "Don't have an account? Sign Up"
-                        : 'Already have an account? Sign In'}
-                    </Link>
-                  </Grid>
-                </Grid>
-              </form>
-            </Paper>
-          </Grid>
-        </Grid>
+              <Box sx={{ mt: 2, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  {isLogin ? "Don't have an account? " : "Already have an account? "}
+                  <Button
+                    onClick={() => setIsLogin(!isLogin)}
+                    sx={{
+                      color: 'primary.main',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      p: 0,
+                      '&:hover': {
+                        bgcolor: 'transparent',
+                        textDecoration: 'underline'
+                      }
+                    }}
+                  >
+                    {isLogin ? 'Sign Up' : 'Sign In'}
+                  </Button>
+                </Typography>
+              </Box>
+            </form>
+          </Paper>
+        </Box>
       </Container>
     </Box>
   );
