@@ -27,14 +27,16 @@ import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import { restaurantApi } from '../services/api';
 import { Refresh as RefreshIcon } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
 
-const Home = ({ user, onLogout }) => {
+const Home = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [anchorEl, setAnchorEl] = useState(null);
   const [cartItems, setCartItems] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
 
   const fetchRestaurants = useCallback(async () => {
     try {
@@ -146,7 +148,7 @@ const Home = ({ user, onLogout }) => {
   const handleLogoutClick = () => {
     localStorage.removeItem('cart');
     handleProfileClose();
-    onLogout();
+    logout();
   };
 
   const handleCheckoutClick = () => {
@@ -254,25 +256,34 @@ const Home = ({ user, onLogout }) => {
                     <PersonIcon sx={{ fontSize: 40 }} />
                   </Avatar>
                   <Typography variant="h6" gutterBottom>
-                    {user?.email}
+                    {user?.name || 'User'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Premium Member
+                    {user?.role === 'restaurant' ? 'Restaurant Owner' : 'Customer'}
                   </Typography>
                 </Box>
                 <Divider />
                 <MenuItem sx={{ py: 1.5 }}>
                   <EmailIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                  <Typography variant="body2">john.doe@example.com</Typography>
+                  <Typography variant="body2">{user?.email}</Typography>
                 </MenuItem>
-                <MenuItem sx={{ py: 1.5 }}>
-                  <PhoneIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                  <Typography variant="body2">+91 98765 43210</Typography>
-                </MenuItem>
-                <MenuItem sx={{ py: 1.5 }}>
-                  <LocationOnIcon sx={{ mr: 2, color: 'text.secondary' }} />
-                  <Typography variant="body2">123 Food Street, Food City</Typography>
-                </MenuItem>
+                {user?.phone && (
+                  <MenuItem sx={{ py: 1.5 }}>
+                    <PhoneIcon sx={{ mr: 2, color: 'text.secondary' }} />
+                    <Typography variant="body2">{user.phone}</Typography>
+                  </MenuItem>
+                )}
+                {user?.address && (
+                  <MenuItem sx={{ py: 1.5 }}>
+                    <LocationOnIcon sx={{ mr: 2, color: 'text.secondary' }} />
+                    <Typography variant="body2">
+                      {user.address}
+                      {user.city && `, ${user.city}`}
+                      {user.state && `, ${user.state}`}
+                      {user.postal_code && ` - ${user.postal_code}`}
+                    </Typography>
+                  </MenuItem>
+                )}
                 <Divider />
                 <MenuItem onClick={handleLogoutClick} sx={{ color: 'error.main' }}>
                   Logout
