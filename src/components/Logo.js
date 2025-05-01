@@ -1,8 +1,9 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 
 const Logo = ({ size = 'medium' }) => {
+  const theme = useTheme();
   const sizes = {
     small: { icon: 24, text: 'h6', gap: 1 },
     medium: { icon: 32, text: 'h4', gap: 1.5 },
@@ -18,14 +19,13 @@ const Logo = ({ size = 'medium' }) => {
       gap: gap,
       p: 1,
       borderRadius: 2,
-      bgcolor: 'rgba(255, 255, 255, 0.1)',
-      backdropFilter: 'blur(8px)',
+      bgcolor: 'primary.main',
+      boxShadow: theme.shadows[2],
     }}>
       <RestaurantIcon 
         sx={{ 
           fontSize: icon,
-          color: 'white',
-          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+          color: 'primary.contrastText',
         }} 
       />
       <Typography 
@@ -34,11 +34,7 @@ const Logo = ({ size = 'medium' }) => {
         sx={{ 
           fontWeight: 800,
           letterSpacing: '1px',
-          color: 'white',
-          textShadow: '0 2px 4px rgba(0,0,0,0.2)',
-          background: 'linear-gradient(45deg, #fff 30%, #e3f2fd 90%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
+          color: 'primary.contrastText',
         }}
       >
         TumDum
