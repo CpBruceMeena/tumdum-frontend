@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -15,7 +15,9 @@ import {
   Menu,
   MenuItem,
   Avatar,
-  Divider
+  Divider,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import Logo from '../components/Logo';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
@@ -23,14 +25,61 @@ import PersonIcon from '@mui/icons-material/Person';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
+import { restaurantApi } from '../services/api';
+import { Refresh as RefreshIcon } from '@mui/icons-material';
 
-const Home = () => {
+const Home = ({ user, onLogout }) => {
   const navigate = useNavigate();
-  const [cartItems, setCartItems] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [cartItems, setCartItems] = useState([]);
+
+  const fetchRestaurants = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      console.log('Fetching restaurants...');
+      const response = await restaurantApi.getAllRestaurants();
+      console.log('Restaurants response:', response);
+      
+      // Check if response is an array or has a restaurants property
+      const restaurantsList = Array.isArray(response) ? response : (response.restaurants || []);
+      console.log('Processed restaurants list:', restaurantsList);
+      
+      if (!restaurantsList || restaurantsList.length === 0) {
+        console.warn('No restaurants found in the response');
+        setError('No restaurants available at the moment.');
+      } else {
+        // Process image URLs to ensure they're absolute
+        const processedList = restaurantsList.map(restaurant => ({
+          ...restaurant,
+          image: restaurant.image 
+            ? (restaurant.image.startsWith('http') ? restaurant.image : `http://localhost:8080${restaurant.image}`)
+            : 'https://via.placeholder.com/300x200'
+        }));
+        console.log('Processed restaurants with images:', processedList);
+        setRestaurants(processedList);
+      }
+    } catch (err) {
+      console.error('Error fetching restaurants:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+      setError(err.response?.data?.message || err.message || 'Failed to load restaurants. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const savedCart = localStorage.getItem('cartItems');
+    fetchRestaurants();
+  }, [fetchRestaurants]);
+
+  useEffect(() => {
+    const savedCart = localStorage.getItem('cart');
     if (savedCart) {
       setCartItems(JSON.parse(savedCart));
     }
@@ -38,6 +87,10 @@ const Home = () => {
 
   const getTotalItems = () => {
     return cartItems.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const handleRestaurantClick = (id) => {
+    navigate(`/restaurant/${id}`);
   };
 
   const handleProfileClick = (event) => {
@@ -48,112 +101,49 @@ const Home = () => {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    // Clear any stored data
-    localStorage.removeItem('cartItems');
-    // Close the menu
+  const handleLogoutClick = () => {
+    localStorage.removeItem('cart');
     handleProfileClose();
-    // Navigate to auth screen
-    navigate('/auth');
+    onLogout();
   };
 
-  // Sample restaurant data
-  const restaurants = [
-    {
-      id: 1,
-      name: "Burger King",
-      image: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/56c9ab92bd79745fd152a30fa2525426",
-      rating: 4.2,
-      deliveryTime: "30-35 min",
-      cuisine: "Burgers, American",
-      price: "₹200 for two"
-    },
-    {
-      id: 2,
-      name: "Pizza Hut",
-      image: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/2b4f62d606d1b2bfba9ba9e5386fabb7",
-      rating: 4.0,
-      deliveryTime: "25-30 min",
-      cuisine: "Pizzas, Italian",
-      price: "₹300 for two"
-    },
-    {
-      id: 3,
-      name: "KFC",
-      image: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/f01666ac73626461d7455d9c24005cd4",
-      rating: 4.1,
-      deliveryTime: "20-25 min",
-      cuisine: "Chicken, Fast Food",
-      price: "₹250 for two"
-    },
-    {
-      id: 4,
-      name: "Subway",
-      image: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/1ace5fa65eff3e1223feb696c956b38b",
-      rating: 4.3,
-      deliveryTime: "15-20 min",
-      cuisine: "Sandwiches, Healthy",
-      price: "₹150 for two"
-    },
-    {
-      id: 5,
-      name: "McDonald's",
-      image: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/56c9ab92bd79745fd152a30fa2525426",
-      rating: 4.4,
-      deliveryTime: "25-30 min",
-      cuisine: "Burgers, Fast Food",
-      price: "₹200 for two"
-    },
-    {
-      id: 6,
-      name: "Domino's Pizza",
-      image: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/2b4f62d606d1b2bfba9ba9e5386fabb7",
-      rating: 4.2,
-      deliveryTime: "30-35 min",
-      cuisine: "Pizzas, Italian",
-      price: "₹350 for two"
-    },
-    {
-      id: 7,
-      name: "Haldiram's",
-      image: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/1ace5fa65eff3e1223feb696c956b38b",
-      rating: 4.5,
-      deliveryTime: "25-30 min",
-      cuisine: "North Indian, Sweets",
-      price: "₹400 for two"
-    },
-    {
-      id: 8,
-      name: "Bikanervala",
-      image: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/f01666ac73626461d7455d9c24005cd4",
-      rating: 4.3,
-      deliveryTime: "20-25 min",
-      cuisine: "North Indian, Street Food",
-      price: "₹300 for two"
-    },
-    {
-      id: 9,
-      name: "Biryani Blues",
-      image: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/56c9ab92bd79745fd152a30fa2525426",
-      rating: 4.4,
-      deliveryTime: "30-35 min",
-      cuisine: "Biryani, Mughlai",
-      price: "₹450 for two"
-    },
-    {
-      id: 10,
-      name: "Cafe Coffee Day",
-      image: "https://media-assets.swiggy.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_660/2b4f62d606d1b2bfba9ba9e5386fabb7",
-      rating: 4.1,
-      deliveryTime: "15-20 min",
-      cuisine: "Coffee, Snacks",
-      price: "₹200 for two"
-    }
-  ];
-
-  const handleRestaurantClick = (restaurantId) => {
-    navigate(`/restaurant/${restaurantId}`);
+  const handleCheckoutClick = () => {
+    navigate('/checkout');
   };
+
+  const handleRetry = () => {
+    fetchRestaurants();
+  };
+
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: 'center' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Alert 
+          severity="error" 
+          action={
+            <Button 
+              color="inherit" 
+              size="small" 
+              startIcon={<RefreshIcon />}
+              onClick={handleRetry}
+            >
+              Retry
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Box>
@@ -176,7 +166,7 @@ const Home = () => {
                     <ShoppingCartIcon />
                   </Badge>
                 }
-                onClick={() => navigate('/checkout')}
+                onClick={handleCheckoutClick}
                 sx={{ 
                   bgcolor: 'white',
                   color: 'primary.main',
@@ -222,7 +212,7 @@ const Home = () => {
                     <PersonIcon sx={{ fontSize: 40 }} />
                   </Avatar>
                   <Typography variant="h6" gutterBottom>
-                    John Doe
+                    {user?.email}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Premium Member
@@ -242,7 +232,7 @@ const Home = () => {
                   <Typography variant="body2">123 Food Street, Food City</Typography>
                 </MenuItem>
                 <Divider />
-                <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+                <MenuItem onClick={handleLogoutClick} sx={{ color: 'error.main' }}>
                   Logout
                 </MenuItem>
               </Menu>
@@ -282,22 +272,30 @@ const Home = () => {
                   height="200"
                   image={restaurant.image}
                   alt={restaurant.name}
+                  onError={(e) => {
+                    console.error('Image failed to load:', restaurant.image);
+                    e.target.src = 'https://via.placeholder.com/300x200';
+                  }}
+                  sx={{
+                    objectFit: 'cover',
+                    backgroundColor: 'grey.200'
+                  }}
                 />
                 <CardContent>
                   <Typography gutterBottom variant="h6" component="div">
                     {restaurant.name}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Rating value={restaurant.rating} precision={0.1} size="small" readOnly />
+                    <Rating value={restaurant.rating || 0} precision={0.1} size="small" readOnly />
                     <Typography variant="body2" sx={{ ml: 1 }}>
-                      {restaurant.rating}
+                      {restaurant.rating || 'N/A'}
                     </Typography>
                   </Box>
                   <Typography variant="body2" color="text.secondary">
                     {restaurant.cuisine}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {restaurant.deliveryTime} • {restaurant.price}
+                    {restaurant.deliveryTime || '30-40'} min
                   </Typography>
                 </CardContent>
               </Card>

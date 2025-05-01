@@ -1,6 +1,6 @@
 # TumDum - Food Delivery App
 
-A modern food delivery application built with React and Material-UI.
+A modern food delivery application built with React and Material-UI, integrated with a backend API.
 
 ## Features
 
@@ -10,6 +10,8 @@ A modern food delivery application built with React and Material-UI.
 - Checkout process
 - User profile management
 - Address management
+- Restaurant owner dashboard
+- Backend API integration
 - Responsive design
 
 ## Tech Stack
@@ -17,7 +19,9 @@ A modern food delivery application built with React and Material-UI.
 - React
 - Material-UI
 - React Router
+- Axios for API calls
 - Local Storage for data persistence
+- Webpack for module bundling
 
 ## Getting Started
 
@@ -25,6 +29,7 @@ A modern food delivery application built with React and Material-UI.
 
 - Node.js (v14 or higher)
 - npm or yarn
+- Backend server running on port 8080
 
 ### Installation
 
@@ -50,27 +55,30 @@ The application will be available at `http://localhost:3000`
 
 ```
 src/
-  ├── pages/           # Page components
-  │   ├── Auth.js      # Authentication page
-  │   ├── Home.js      # Home page with restaurant listings
-  │   ├── Restaurant.js # Restaurant details page
-  │   ├── Checkout.js  # Checkout page
-  │   └── Profile.js   # User profile page
-  ├── components/      # Reusable components
-  ├── App.js          # Main application component
-  └── index.js        # Application entry point
+  ├── pages/                    # Page components
+  │   ├── Auth.js              # Authentication page
+  │   ├── Home.js              # Home page with restaurant listings
+  │   ├── Restaurant.js        # Restaurant details page
+  │   ├── Checkout.js          # Checkout page
+  │   ├── Profile.js           # User profile page
+  │   └── RestaurantDashboard.js # Restaurant owner dashboard
+  ├── services/                # API services
+  │   └── api.js              # API integration
+  ├── components/              # Reusable components
+  ├── App.js                   # Main application component
+  └── index.js                 # Application entry point
 ```
 
 ## Features in Detail
 
 ### Restaurant Listing
-- View list of restaurants
+- View list of restaurants from backend API
 - Filter restaurants by cuisine
 - Sort by rating, delivery time, or price
 
 ### Restaurant Details
 - View restaurant information
-- Browse menu items
+- Browse menu items from backend API
 - Add items to cart
 - Adjust quantities
 
@@ -83,13 +91,29 @@ src/
 ### Checkout
 - Review order items
 - Manage delivery address
-- View order summary
+- View order summary with taxes
 - Place order
+
+### Restaurant Dashboard
+- Manage restaurant details
+- Add/Edit/Delete menu items
+- Upload dish images
+- View restaurant statistics
 
 ### User Profile
 - Manage delivery address
 - View order history
 - Update user preferences
+
+## API Integration
+
+The application integrates with a backend API running on port 8080. The following endpoints are used:
+
+- `/api/restaurants` - Get all restaurants
+- `/api/restaurants/:id` - Get restaurant details
+- `/api/restaurants/:id/dishes` - Get restaurant dishes
+- `/api/auth` - Authentication endpoints
+- `/api/orders` - Order management
 
 ## Contributing
 

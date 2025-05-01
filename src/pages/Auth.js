@@ -7,43 +7,141 @@ import {
   Typography,
   TextField,
   Button,
-  Tab,
+  Link,
   Tabs,
+  Tab,
   InputAdornment,
   IconButton,
   Grid,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import Logo from '../components/Logo';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import PersonIcon from '@mui/icons-material/Person';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [tabValue, setTabValue] = useState(0);
-  const [showPassword, setShowPassword] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
+  const [userType, setUserType] = useState('customer');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     name: '',
-    confirmPassword: '',
+    restaurantName: '',
+    cuisine: '',
+    address: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
 
-  const handleTabChange = (event, newValue) => {
-    setTabValue(newValue);
-  };
-
-  const handleInputChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+    setApiError('');
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+
+    if (!isLogin) {
+      if (userType === 'customer') {
+        if (!formData.name) {
+          newErrors.name = 'Name is required';
+        }
+      } else {
+        if (!formData.restaurantName) {
+          newErrors.restaurantName = 'Restaurant name is required';
+        }
+        if (!formData.cuisine) {
+          newErrors.cuisine = 'Cuisine type is required';
+        }
+        if (!formData.address) {
+          newErrors.address = 'Address is required';
+        }
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically handle authentication
-    // For now, we'll just navigate to home
-    navigate('/home');
+    if (validateForm()) {
+      try {
+        setLoading(true);
+        setApiError('');
+
+        // Skip authentication and directly proceed
+        const mockUserData = {
+          id: 1,
+          email: formData.email,
+          name: userType === 'customer' ? formData.name : formData.restaurantName,
+          type: userType,
+          ...(userType === 'restaurant' && {
+            restaurantDetails: {
+              cuisine: formData.cuisine,
+              address: formData.address,
+            },
+          }),
+        };
+
+        // Store mock user data
+        localStorage.setItem('user', JSON.stringify(mockUserData));
+        localStorage.setItem('token', 'mock-token');
+
+        // Navigate based on user type
+        if (userType === 'restaurant') {
+          navigate('/dashboard');
+        } else {
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Navigation error:', error);
+        setApiError('Navigation failed. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setUserType(newValue);
+    setFormData({
+      email: '',
+      password: '',
+      name: '',
+      restaurantName: '',
+      cuisine: '',
+      address: '',
+    });
+    setErrors({});
+    setApiError('');
   };
 
   return (
@@ -95,118 +193,172 @@ const Auth = () => {
                 mx: 'auto',
               }}
             >
+              <Box sx={{ mb: 4, textAlign: 'center' }}>
+                <Typography variant="h4" component="h1" gutterBottom>
+                  {isLogin ? 'Welcome Back!' : 'Create Account'}
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  {isLogin
+                    ? 'Sign in to continue to TumDum'
+                    : 'Join TumDum to start your journey'}
+                </Typography>
+              </Box>
+
               <Tabs
-                value={tabValue}
+                value={userType}
                 onChange={handleTabChange}
-                sx={{
-                  mb: 4,
-                  width: '100%',
-                  '& .MuiTab-root': {
-                    fontSize: '1.1rem',
-                    fontWeight: 600,
-                    py: 2,
-                  },
-                }}
+                centered
+                sx={{ mb: 3 }}
               >
-                <Tab label="Login" sx={{ flex: 1 }} />
-                <Tab label="Sign Up" sx={{ flex: 1 }} />
+                <Tab
+                  value="customer"
+                  label="Customer"
+                  icon={<PersonIcon />}
+                  iconPosition="start"
+                />
+                <Tab
+                  value="restaurant"
+                  label="Restaurant"
+                  icon={<RestaurantIcon />}
+                  iconPosition="start"
+                />
               </Tabs>
 
-              <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
-                {tabValue === 1 && (
-                  <TextField
-                    margin="normal"
-                    required
-                    fullWidth
-                    label="Full Name"
-                    name="name"
-                    autoComplete="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    sx={{ mb: 2 }}
-                  />
-                )}
+              {apiError && (
+                <Alert severity="error" sx={{ mb: 3 }}>
+                  {apiError}
+                </Alert>
+              )}
 
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  label="Email Address"
-                  name="email"
-                  autoComplete="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  sx={{ mb: 2 }}
-                />
+              <form onSubmit={handleSubmit}>
+                <Grid container spacing={2}>
+                  {!isLogin && userType === 'customer' && (
+                    <Grid item xs={12}>
+                      <TextField
+                        fullWidth
+                        label="Name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        error={!!errors.name}
+                        helperText={errors.name}
+                      />
+                    </Grid>
+                  )}
 
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  name="password"
-                  label="Password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete={tabValue === 0 ? 'current-password' : 'new-password'}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  sx={{ mb: 2 }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
+                  {!isLogin && userType === 'restaurant' && (
+                    <>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Restaurant Name"
+                          name="restaurantName"
+                          value={formData.restaurantName}
+                          onChange={handleChange}
+                          error={!!errors.restaurantName}
+                          helperText={errors.restaurantName}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Cuisine Type"
+                          name="cuisine"
+                          value={formData.cuisine}
+                          onChange={handleChange}
+                          error={!!errors.cuisine}
+                          helperText={errors.cuisine}
+                        />
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField
+                          fullWidth
+                          label="Address"
+                          name="address"
+                          value={formData.address}
+                          onChange={handleChange}
+                          error={!!errors.address}
+                          helperText={errors.address}
+                          multiline
+                          rows={2}
+                        />
+                      </Grid>
+                    </>
+                  )}
 
-                {tabValue === 1 && (
-                  <TextField
-                    margin="normal"
-                    required
-                    fullWidth
-                    name="confirmPassword"
-                    label="Confirm Password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    sx={{ mb: 2 }}
-                  />
-                )}
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      error={!!errors.email}
+                      helperText={errors.email}
+                    />
+                  </Grid>
 
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  size="large"
-                  sx={{
-                    mt: 3,
-                    mb: 2,
-                    py: 1.5,
-                    fontSize: '1.1rem',
-                    textTransform: 'none',
-                  }}
-                >
-                  {tabValue === 0 ? 'Login' : 'Sign Up'}
-                </Button>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={handleChange}
+                      error={!!errors.password}
+                      helperText={errors.password}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowPassword(!showPassword)}
+                              edge="end"
+                            >
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </Grid>
 
-                {tabValue === 0 && (
-                  <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-                    Don't have an account?{' '}
+                  <Grid item xs={12}>
                     <Button
-                      color="primary"
-                      onClick={() => setTabValue(1)}
-                      sx={{ textTransform: 'none', fontWeight: 600 }}
+                      type="submit"
+                      fullWidth
+                      variant="contained"
+                      size="large"
+                      disabled={loading}
+                      sx={{ mt: 2 }}
                     >
-                      Sign Up
+                      {loading ? (
+                        <CircularProgress size={24} color="inherit" />
+                      ) : (
+                        isLogin ? 'Sign In' : 'Create Account'
+                      )}
                     </Button>
-                  </Typography>
-                )}
-              </Box>
+                  </Grid>
+
+                  <Grid item xs={12} sx={{ textAlign: 'center' }}>
+                    <Link
+                      component="button"
+                      variant="body2"
+                      onClick={() => {
+                        setIsLogin(!isLogin);
+                        setErrors({});
+                        setApiError('');
+                      }}
+                      sx={{ mt: 2 }}
+                    >
+                      {isLogin
+                        ? "Don't have an account? Sign Up"
+                        : 'Already have an account? Sign In'}
+                    </Link>
+                  </Grid>
+                </Grid>
+              </form>
             </Paper>
           </Grid>
         </Grid>

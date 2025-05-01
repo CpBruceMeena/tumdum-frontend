@@ -1,41 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-
-// Pages
-import Auth from './pages/Auth';
 import Home from './pages/Home';
 import Restaurant from './pages/Restaurant';
+import Auth from './pages/Auth';
 import Checkout from './pages/Checkout';
-import Profile from './pages/Profile';
+import RestaurantDashboard from './pages/RestaurantDashboard';
 
-// Create theme
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#2196F3', // Light blue
-      light: '#64B5F6',
-      dark: '#1976D2',
+      main: '#FF4B2B',
     },
     secondary: {
-      main: '#90CAF9', // Lighter blue
+      main: '#FF416C',
     },
     background: {
-      default: '#F5F9FF', // Very light blue background
+      default: '#f5f5f5',
     },
   },
   typography: {
-    fontFamily: '"ProximaNova", "Arial", sans-serif',
-    h4: {
-      fontWeight: 600,
-    },
+    fontFamily: '"Poppins", "Helvetica", "Arial", sans-serif',
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
           borderRadius: 8,
+          textTransform: 'none',
+          fontWeight: 600,
         },
       },
     },
@@ -43,29 +37,87 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
         },
       },
     },
   },
 });
 
-function App() {
+const App = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    localStorage.removeItem('cart');
+    setUser(null);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/restaurant/:id" element={<Restaurant />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/" element={<Navigate to="/auth" replace />} />
+          <Route
+            path="/"
+            element={
+              user ? (
+                user.type === 'restaurant' ? (
+                  <Navigate to="/dashboard" replace />
+                ) : (
+                  <Home user={user} onLogout={handleLogout} />
+                )
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/auth"
+            element={user ? <Navigate to="/" replace /> : <Auth />}
+          />
+          <Route
+            path="/restaurant/:id"
+            element={
+              user ? (
+                <Restaurant user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              user ? (
+                <Checkout user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/auth" replace />
+              )
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              user && user.type === 'restaurant' ? (
+                <RestaurantDashboard user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </ThemeProvider>
   );
-}
+};
 
 export default App;

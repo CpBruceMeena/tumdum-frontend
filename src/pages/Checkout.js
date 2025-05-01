@@ -27,7 +27,7 @@ import EditIcon from '@mui/icons-material/Edit';
 const Checkout = () => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = React.useState(() => {
-    const savedCart = localStorage.getItem('cartItems');
+    const savedCart = localStorage.getItem('cart');
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
@@ -52,7 +52,7 @@ const Checkout = () => {
         return item;
       }).filter(item => item.quantity > 0);
       
-      localStorage.setItem('cartItems', JSON.stringify(newItems));
+      localStorage.setItem('cart', JSON.stringify(newItems));
       return newItems;
     });
   };
@@ -60,7 +60,7 @@ const Checkout = () => {
   const removeFromCart = (itemId) => {
     setCartItems(prevItems => {
       const newItems = prevItems.filter(item => item.id !== itemId);
-      localStorage.setItem('cartItems', JSON.stringify(newItems));
+      localStorage.setItem('cart', JSON.stringify(newItems));
       return newItems;
     });
   };
@@ -288,7 +288,7 @@ const Checkout = () => {
                 return;
               }
               alert('Order placed successfully!');
-              localStorage.removeItem('cartItems');
+              localStorage.removeItem('cart');
               navigate('/');
             }}
             sx={{ mt: 2, mb: 0 }}
