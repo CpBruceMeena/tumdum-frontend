@@ -56,10 +56,23 @@ export const restaurantApi = {
   // Get all restaurants
   getAllRestaurants: async () => {
     try {
+      console.log('Making API call to fetch restaurants...');
       const response = await api.get('/restaurants');
+      console.log('Raw API response structure:', {
+        status: response.status,
+        data: response.data,
+        isArray: Array.isArray(response.data),
+        keys: Object.keys(response.data),
+        firstRestaurant: Array.isArray(response.data) ? response.data[0] : null
+      });
       return response.data;
     } catch (error) {
-      console.error('Error fetching restaurants:', error);
+      console.error('Error in getAllRestaurants:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        config: error.config
+      });
       throw error;
     }
   },

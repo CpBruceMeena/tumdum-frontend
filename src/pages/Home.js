@@ -46,19 +46,61 @@ const Home = ({ user, onLogout }) => {
       
       // Check if response is an array or has a restaurants property
       const restaurantsList = Array.isArray(response) ? response : (response.restaurants || []);
-      console.log('Processed restaurants list:', restaurantsList);
+      console.log('Raw restaurants data from backend:', restaurantsList.map(r => ({
+        id: r.id,
+        name: r.name,
+        cover_image_url: r.cover_image_url,
+        logo_url: r.logo_url
+      })));
       
       if (!restaurantsList || restaurantsList.length === 0) {
         console.warn('No restaurants found in the response');
         setError('No restaurants available at the moment.');
       } else {
         // Process image URLs to ensure they're absolute
-        const processedList = restaurantsList.map(restaurant => ({
-          ...restaurant,
-          image: restaurant.image 
-            ? (restaurant.image.startsWith('http') ? restaurant.image : `http://localhost:8080${restaurant.image}`)
-            : 'https://via.placeholder.com/300x200'
-        }));
+        const processedList = restaurantsList.map((restaurant, index) => {
+          console.log('Processing restaurant image:', {
+            id: restaurant.id,
+            name: restaurant.name,
+            coverImage: restaurant.cover_image_url,
+            logoImage: restaurant.logo_url,
+            index
+          });
+
+          let imageUrl = restaurant.cover_image_url;
+          
+          if (restaurant.cover_image_url) {
+            if (restaurant.cover_image_url.startsWith('http')) {
+              console.log('Using absolute URL:', restaurant.cover_image_url);
+            } else if (restaurant.cover_image_url.startsWith('/')) {
+              imageUrl = `http://localhost:8080${restaurant.cover_image_url}`;
+              console.log('Converted relative URL with leading slash:', {
+                original: restaurant.cover_image_url,
+                converted: imageUrl
+              });
+            } else {
+              imageUrl = `http://localhost:8080/${restaurant.cover_image_url}`;
+              console.log('Converted relative URL without leading slash:', {
+                original: restaurant.cover_image_url,
+                converted: imageUrl
+              });
+            }
+          } else {
+            console.log('No cover image URL provided for restaurant:', restaurant.id);
+          }
+
+          console.log('Final image URL:', {
+            id: restaurant.id,
+            name: restaurant.name,
+            finalImageUrl: imageUrl
+          });
+
+          return {
+            ...restaurant,
+            image: imageUrl
+          };
+        });
+        
         console.log('Processed restaurants with images:', processedList);
         setRestaurants(processedList);
       }
@@ -273,8 +315,22 @@ const Home = ({ user, onLogout }) => {
                   image={restaurant.image}
                   alt={restaurant.name}
                   onError={(e) => {
-                    console.error('Image failed to load:', restaurant.image);
-                    e.target.src = 'https://via.placeholder.com/300x200';
+                    console.error('Image failed to load:', {
+                      restaurantId: restaurant.id,
+                      restaurantName: restaurant.name,
+                      imageUrl: restaurant.image,
+                      error: e
+                    });
+                    // Try local image as fallback
+                    const localImageIndex = (restaurant.id % 5) + 1;
+                    e.target.src = `/images/restaurants/covers/restaurant_cover_${localImageIndex}.jpg`;
+                  }}
+                  onLoad={(e) => {
+                    console.log('Image loaded successfully:', {
+                      restaurantId: restaurant.id,
+                      restaurantName: restaurant.name,
+                      imageUrl: restaurant.image
+                    });
                   }}
                   sx={{
                     objectFit: 'cover',
